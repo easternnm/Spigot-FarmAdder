@@ -1,0 +1,12 @@
+name: FarmAdder
+version: '1.0'
+main: me.do31.farmAdder.FarmAdder
+api-version: '1.20'
+author: do31
+description: 농작물 개선 플러그인
+depend:
+
+commands:
+    farmadder:
+        description: 농작물 개선 플러그인
+        aliases: [fa]

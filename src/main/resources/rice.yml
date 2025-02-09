@@ -1,0 +1,22 @@
+씨앗:
+  id: WHEAT_SEEDS
+  custom_model_data: 1
+  name: "&a볍씨"
+  lore:
+    - "&7쌀의 씨앗"
+
+수확:
+  1:
+    id: WHEAT_SEEDS
+    custom_model_data: 1
+    amount: 1
+    name: "&a쌀 씨앗"
+    lore:
+      - "&7쌀의 씨앗"
+  2:
+    id: WHEAT
+    custom_model_data: 1
+    amount: 1
+    name: "&f쌀"
+    lore:
+      - "&f쌀"
