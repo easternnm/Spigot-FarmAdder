@@ -1,3 +1,18 @@
+# crop_data는 파일명과 같은 이름으로 사용해야 합니다.
+# 예) rice.yml -> crop_data: rice
+
+# 사용 가능한 작물 리스트
+# - WHEAT (밀)
+# - CARROT (당근)
+# - POTATO (감자)
+# - BEETROOT (비트)
+# - NETHER_WART (네더 와트)
+# - COCOA (코코아)
+
+# 보상 여러개 설정 가능
+
+crop_data: rice
+
 씨앗:
   id: WHEAT_SEEDS
   custom_model_data: 1
@@ -5,15 +20,8 @@
   lore:
     - "&7쌀의 씨앗"
 
-수확:
+보상:
   1:
-    id: WHEAT_SEEDS
-    custom_model_data: 1
-    amount: 1
-    name: "&a쌀 씨앗"
-    lore:
-      - "&7쌀의 씨앗"
-  2:
     id: WHEAT
     custom_model_data: 1
     amount: 1

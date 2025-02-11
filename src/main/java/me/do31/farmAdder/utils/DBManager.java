@@ -19,7 +19,6 @@ public class DBManager {
         try {
             if (connection == null || connection.isClosed()) {
                 connection = DriverManager.getConnection(dbUrl);
-                System.out.println("[DB] 연결 성공: " + dbUrl);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -110,7 +109,6 @@ public class DBManager {
         try {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
-                System.out.println("[DB] 연결 종료");
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -118,8 +116,7 @@ public class DBManager {
     }
 
 
-    public void setupDatabase(DBManager dbManager) {
-        createTable("growing", "id INTEGER PRIMARY KEY, location TEXT, crop TEXT");
-        createTable("grown", "id INTEGER PRIMARY KEY, location TEXT, crop TEXT");
+    public void setupDatabase() {
+        createTable("crops", "id INTEGER PRIMARY KEY, location TEXT, crop TEXT");
     }
 }
