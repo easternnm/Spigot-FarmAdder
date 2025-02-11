@@ -77,9 +77,9 @@ public class CropsConfigManager {
             }
 
             if (config.contains("crop_data")) {
-                NamespacedKey key = new NamespacedKey(instance, "crop_data");
+                NamespacedKey tags = new NamespacedKey(instance, "crop_data");
                 String cropData = config.getString("crop_data");
-                meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, cropData);
+                meta.getPersistentDataContainer().set(tags, PersistentDataType.STRING, cropData);
             }
 
             seedItem.setItemMeta(meta);
@@ -117,6 +117,13 @@ public class CropsConfigManager {
                             }
                             meta.setLore(translatedLore);
                         }
+
+                        if (config.contains("crop_data")) {
+                            NamespacedKey tags = new NamespacedKey(instance, "crop_data");
+                            String cropData = config.getString("crop_data");
+                            meta.getPersistentDataContainer().set(tags, PersistentDataType.STRING, cropData);
+                        }
+
                         awardItem.setItemMeta(meta);
                     }
                     awards.add(awardItem);

@@ -7,6 +7,7 @@ import me.do31.farmAdder.listners.CropWaterBreakEvent;
 import me.do31.farmAdder.utils.ConfigManager;
 import me.do31.farmAdder.utils.CropsConfigManager;
 import me.do31.farmAdder.utils.DBManager;
+import me.do31.farmAdder.utils.PreventBoneMealEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FarmAdder extends JavaPlugin {
@@ -34,6 +35,7 @@ public final class FarmAdder extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CropPlaceEvent(), this);
         getServer().getPluginManager().registerEvents(new CropBreakEvent(), this);
         getServer().getPluginManager().registerEvents(new CropWaterBreakEvent(), this);
+        getServer().getPluginManager().registerEvents(new PreventBoneMealEvent(), this);
         this.getLogger().info("FarmAdder 가 정상적으로 활성화 되었습니다.");
     }
 
