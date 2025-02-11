@@ -1,44 +1,47 @@
 package me.do31.farmAdder.utils;
 
-import org.bukkit.Location;
-import org.jetbrains.annotations.NotNull;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DBManager {
-    private static Connection connection;
-
+    private Connection connection;
     private final String dbUrl;
 
+    // 생성자에서 DB 경로 설정
     public DBManager(String dbPath) {
         this.dbUrl = "jdbc:sqlite:" + dbPath;
+        connect();
+    }
+
+    // 연결 유지 및 자동 복구
+    private void connect() {
         try {
-            connection = DriverManager.getConnection(dbUrl);
+            if (connection == null || connection.isClosed()) {
+                connection = DriverManager.getConnection(dbUrl);
+                System.out.println("[DB] 연결 성공: " + dbUrl);
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    public Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(dbUrl);
-        }
+    public Connection getConnection() {
+        connect(); // 항상 연결 유지
         return connection;
     }
 
-    public static void createTable(String tableName, String tableSchema) {
+    // 테이블 생성
+    public void createTable(String tableName, String tableSchema) {
         String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + tableSchema + ")";
-        try {
-            connection.createStatement().execute(sql);
+        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+            stmt.execute();
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
-
     }
 
+    // 데이터 삽입
     public void insertData(String tableName, String columns, String values, Object... params) {
         String sql = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ")";
         try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
@@ -51,32 +54,72 @@ public class DBManager {
         }
     }
 
-    public int updateData(String query, Object... params) throws SQLException {
+    // 데이터 수정
+    public int updateData(String query, Object... params) {
         try (PreparedStatement stmt = getConnection().prepareStatement(query)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
             }
             return stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
         }
     }
 
-    public static void deleteData() {
-    }
-
-    public static void selectData() {
-    }
-
-    public static void close() {
-        try {
-            if(connection != null && !connection.isClosed()) {
-                connection.close();
+    // 데이터 조회 (ResultSet이 아니라 리스트로 반환)
+    public List<String[]> selectData(String query, Object... params) {
+        List<String[]> results = new ArrayList<>();
+        try (PreparedStatement stmt = getConnection().prepareStatement(query)) {
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                int columnCount = rs.getMetaData().getColumnCount();
+                while (rs.next()) {
+                    String[] row = new String[columnCount];
+                    for (int i = 0; i < columnCount; i++) {
+                        row[i] = rs.getString(i + 1);
+                    }
+                    results.add(row);
+                }
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+        }
+        return results;
+    }
+
+    // 데이터 삭제 (WHERE 절 검증 추가)
+    public void deleteData(String query, Object... params) {
+        if (!query.toLowerCase().contains("where")) {
+            throw new IllegalArgumentException("[DB] DELETE 실행 시 WHERE 조건이 필요합니다.");
+        }
+        try (PreparedStatement stmt = getConnection().prepareStatement(query)) {
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
-    public static void setupDatabase(DBManager dbManager) {
-        dbManager.createTable("farm", "id INTEGER PRIMARY KEY, location TEXT, crop TEXT");
-    };
+    // 연결 닫기
+    public void close() {
+        try {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+                System.out.println("[DB] 연결 종료");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    public void setupDatabase(DBManager dbManager) {
+        createTable("growing", "id INTEGER PRIMARY KEY, location TEXT, crop TEXT");
+        createTable("grown", "id INTEGER PRIMARY KEY, location TEXT, crop TEXT");
+    }
 }
