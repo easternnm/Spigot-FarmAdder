@@ -43,7 +43,7 @@ public class BasicCommand implements CommandExecutor {
             }
             if(args[0].equalsIgnoreCase("reload")) {
                 if(sender.hasPermission("farmadder.admin")) {
-                    ConfigManager.loadConfig();
+                    ConfigManager.reloadConfig();
                     CropsConfigManager.loadCropsConfigs();
                     sender.sendMessage(ChatColor.GREEN + "플러그인 설정을 다시 불러왔습니다.");
                     return true;

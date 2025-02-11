@@ -7,7 +7,7 @@ import me.do31.farmAdder.listners.CropWaterBreakEvent;
 import me.do31.farmAdder.utils.ConfigManager;
 import me.do31.farmAdder.utils.CropsConfigManager;
 import me.do31.farmAdder.utils.DBManager;
-import me.do31.farmAdder.utils.PreventBoneMealEvent;
+import me.do31.farmAdder.listners.PreventBoneMealEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FarmAdder extends JavaPlugin {

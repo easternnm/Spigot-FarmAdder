@@ -1,6 +1,7 @@
-package me.do31.farmAdder.utils;
+package me.do31.farmAdder.listners;
 
 import me.do31.farmAdder.FarmAdder;
+import me.do31.farmAdder.utils.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -71,7 +72,7 @@ public class PreventBoneMealEvent implements Listener {
             List<String[]> results = instance.getDBManager().selectData("SELECT crop FROM crops WHERE location = ?", locString);
 
             // 특정 작물에 뼛가루 사용 차단
-            if (!results.isEmpty() && instance.getConfig().getBoolean("뼛가루_사용여부")) {
+            if (!results.isEmpty() && !instance.getConfig().getBoolean("뼛가루_사용여부")) {
                 e.setCancelled(true);
             }
         }
