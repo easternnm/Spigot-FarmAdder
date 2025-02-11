@@ -3,6 +3,9 @@ package me.do31.farmAdder.utils;
 import me.do31.farmAdder.FarmAdder;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.io.File;
+import java.io.IOException;
+
 public class ConfigManager {
     private static final FarmAdder instance = FarmAdder.getInstance();
     private static FileConfiguration config;
@@ -53,6 +56,10 @@ public class ConfigManager {
     }
 
     public static void saveConfig() {
-        instance.saveConfig();
+        try {
+            config.save(new File(instance.getDataFolder(), "config.yml"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
