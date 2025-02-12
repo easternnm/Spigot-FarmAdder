@@ -1,6 +1,7 @@
 package me.do31.farmAdder;
 
 import me.do31.farmAdder.commands.BasicCommand;
+import me.do31.farmAdder.commands.BasicCommandTabCompleter;
 import me.do31.farmAdder.listners.CropBreakEvent;
 import me.do31.farmAdder.listners.CropPlaceEvent;
 import me.do31.farmAdder.listners.CropWaterBreakEvent;
@@ -32,6 +33,7 @@ public final class FarmAdder extends JavaPlugin {
         dbManager.setupDatabase();
 
         getCommand("farmadder").setExecutor(new BasicCommand());
+        getCommand("farmadder").setTabCompleter(new BasicCommandTabCompleter());
 
         getServer().getPluginManager().registerEvents(new CropPlaceEvent(), this);
         getServer().getPluginManager().registerEvents(new CropBreakEvent(), this);

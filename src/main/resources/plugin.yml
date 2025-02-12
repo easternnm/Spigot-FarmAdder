@@ -10,3 +10,4 @@ commands:
     farmadder:
         description: 농작물 개선 플러그인
         aliases: [fa]
+        tab-completer: me.do31.farmAdder.commands.BasicCommandTabCompleter

@@ -19,7 +19,7 @@ public class BasicCommand implements CommandExecutor {
 
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, String[] args) {
 
-        boolean explain = false;
+        boolean explain;
 
         if(!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.RED + "[FarmAdder] 버킷에서는 사용할 수 없는 명령어 입니다.");
@@ -52,10 +52,8 @@ public class BasicCommand implements CommandExecutor {
         }
 
         if(args[0].equalsIgnoreCase("give")) {
-            if(args.length == 3 || args.length == 4) {
-                giveCommand((Player) sender, args);
-                return true;
-            }
+            giveCommand((Player) sender, args);
+            return true;
         }
 
         if(args[0].equalsIgnoreCase("particle")) {
@@ -104,9 +102,18 @@ public class BasicCommand implements CommandExecutor {
         String cropName = "";
         int amount = 0;
 
-        if(args.length == 4) {
+        if (args.length == 3) {
+            target = player;
+            cropName = args[1];
+            try {
+                amount = Integer.parseInt(args[2]);
+            } catch (NumberFormatException e) {
+                player.sendMessage(ChatColor.RED + "잘못된 값입니다. 숫자만 입력해주세요.");
+                return;
+            }
+        } else if(args.length == 4) {
             target = player.getServer().getPlayer(args[1]);
-            if(target == null) {
+            if (target == null) {
                 player.sendMessage(ChatColor.RED + "플레이어를 찾을 수 없습니다.");
                 return;
             }
@@ -117,16 +124,13 @@ public class BasicCommand implements CommandExecutor {
                 player.sendMessage(ChatColor.RED + "잘못된 값입니다. 숫자만 입력해주세요.");
                 return;
             }
-
-        } else if (args.length == 3) {
-            target = player;
-            cropName = args[1];
-            try {
-                amount = Integer.parseInt(args[2]);
-            } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "잘못된 값입니다. 숫자만 입력해주세요.");
-                return;
+        } else {
+            StringBuilder cropList = new StringBuilder(ChatColor.GREEN + "사용 가능한 작물: ");
+            for (String crop : CropsConfigManager.getCrops()) {
+                cropList.append(ChatColor.GRAY).append(crop).append(ChatColor.WHITE).append(", ");
             }
+            player.sendMessage(cropList.toString());
+            return;
         }
 
         ItemStack seedItem = CropsConfigManager.createSeed(cropName);

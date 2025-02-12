@@ -51,6 +51,10 @@ public class CropsConfigManager {
         instance.getLogger().info("총 " + cropsConfigs.size() + "개의 작물 설정 파일을 로드했습니다.");
     }
 
+    public static String[] getCrops() {
+        return cropsConfigs.keySet().toArray(new String[0]);
+    }
+
     public static ItemStack createSeed(String cropName) {
         FileConfiguration config = cropsConfigs.get(cropName);
         if (config == null) {
