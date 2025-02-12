@@ -45,7 +45,7 @@ public class BasicCommand implements CommandExecutor {
                 if(sender.hasPermission("farmadder.admin")) {
                     ConfigManager.reloadConfig();
                     CropsConfigManager.loadCropsConfigs();
-                    sender.sendMessage(ChatColor.GREEN + "플러그인 설정을 다시 불러왔습니다.");
+                    sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[&6 FarmAdder&f ]&e 플러그인 설정을 다시 불러왔습니다."));
                     return true;
                 }
             }
