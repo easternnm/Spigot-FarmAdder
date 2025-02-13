@@ -25,13 +25,15 @@ public class BasicCommandTabCompleter implements TabCompleter {
         }
 
         if(args.length == 1) {
-            List<String> commands = List.of("give", "particle", "reload", "shop");
+            List<String> commands = List.of("give", "particle", "reload", "shop", "bonemeal");
             complections.addAll(commands);
         } else if(args.length == 2) {
             if(args[0].equalsIgnoreCase("give")) {
                 complections.addAll(sender.getServer().getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()));
             } else if(args[0].equalsIgnoreCase("particle")) {
-                complections.addAll(Arrays.asList("on", "off", "type", "amount"));
+                complections.addAll(Arrays.asList("on", "off", "type", "amount", "period"));
+            } else if(args[0].equalsIgnoreCase("bonemeal")) {
+                complections.addAll(Arrays.asList("on", "off"));
             }
         } else if(args.length == 3) {
             if(args[0].equalsIgnoreCase("give")) {

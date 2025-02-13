@@ -3,6 +3,8 @@ package me.do31.farmAdder.commands;
 import me.do31.farmAdder.FarmAdder;
 import me.do31.farmAdder.utils.ConfigManager;
 import me.do31.farmAdder.utils.CropsConfigManager;
+import me.do31.farmAdder.utils.ParticleManager;
+import me.do31.farmAdder.utils.ShopManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
 import org.bukkit.command.Command;
@@ -38,17 +40,26 @@ public class BasicCommand implements CommandExecutor {
 
         if(args.length == 1) {
             if(args[0].equalsIgnoreCase("shop")) {
-                sender.sendMessage(ChatColor.RED + "아직 준비중인 기능입니다.");
+                ShopManager.openShop((Player) sender);
                 return true;
             }
             if(args[0].equalsIgnoreCase("reload")) {
                 if(sender.hasPermission("farmadder.admin")) {
                     ConfigManager.reloadConfig();
-                    CropsConfigManager.loadCropsConfigs();
                     sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[&6 FarmAdder&f ]&e 플러그인 설정을 다시 불러왔습니다."));
                     return true;
                 }
             }
+        }
+        if(args[0].equalsIgnoreCase("bonemeal")) {
+            if(args[1].equalsIgnoreCase("on")) {
+                ConfigManager.setBoolean("뼛가루_사용여부", true);
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] 뼛가루 사용이 활성화 되었습니다."));
+            } else if(args[1].equalsIgnoreCase("off")) {
+                ConfigManager.setBoolean("뼛가루_사용여부", false);
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] 뼛가루 사용이 비활성화 되었습니다."));
+            }
+            return true;
         }
 
         if(args[0].equalsIgnoreCase("give")) {
@@ -57,10 +68,8 @@ public class BasicCommand implements CommandExecutor {
         }
 
         if(args[0].equalsIgnoreCase("particle")) {
-
             particleCommand((Player) sender, args);
             return true;
-
         } else {
             explain = true;
         }
@@ -76,6 +85,7 @@ public class BasicCommand implements CommandExecutor {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder give <플레이어> <작물> <수량> "));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder shop"));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder particle"));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder bonemeal <on/off>"));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder reload"));
                 player.sendMessage("");
             }
@@ -91,6 +101,7 @@ public class BasicCommand implements CommandExecutor {
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7/farmadder particle <on/off>"));
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7/farmadder particle amount <크기>"));
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7/farmadder particle type <파티클 종류>"));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7/farmadder particle period <초>"));
         player.sendMessage("");
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7Plugin by &6DEOJI_"));
         player.sendMessage("");
@@ -173,7 +184,18 @@ public class BasicCommand implements CommandExecutor {
                     player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] 파티클 종류가 " + particleType.name() + "로 변경되었습니다."));
 
                 } catch (IllegalAccessError e) {
-                    player.sendMessage(ChatColor.RED + "잘못된 값입니다. 사용 가능한 파티클: " + ChatColor.GRAY + Arrays.toString(Particle.values()));
+                    player.sendMessage(ChatColor.RED + "잘못된 값입니다.");
+                }
+            } else if(args[1].equalsIgnoreCase("period")) {
+                try {
+                    int period = Integer.parseInt(args[2]);
+                    ConfigManager.setInt("파티클_주기", period);
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] 파티클 주기가 " + period + "초로 변경되었습니다."));
+
+                    ParticleManager.spawnParticle();
+
+                } catch (NumberFormatException e) {
+                    player.sendMessage(ChatColor.RED + "잘못된 값입니다. 숫자만 입력해주세요.");
                 }
             } else {
                 particleInfo(player);

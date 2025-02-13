@@ -21,11 +21,17 @@ public class ConfigManager {
         config = instance.getConfig();
         config.options().copyDefaults(true);
         saveConfig();
+
+        ShopManager.loadShopConfig();
+        CropsConfigManager.loadCropsConfigs();
     }
 
     public static void reloadConfig() {
         instance.reloadConfig();
         config = instance.getConfig();
+
+        ShopManager.loadShopConfig();
+        CropsConfigManager.loadCropsConfigs();
     }
 
     public static String getString(String path) {

@@ -1,9 +1,11 @@
 package me.do31.farmAdder.utils;
 
 import me.do31.farmAdder.FarmAdder;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -15,9 +17,14 @@ import java.util.List;
 public class ParticleManager {
 
     private static final FarmAdder instance = FarmAdder.getInstance();
+    private static BukkitTask currentTask;
 
     public static void spawnParticle() {
-        new BukkitRunnable() {
+        if(currentTask != null && !currentTask.isCancelled()) {
+            currentTask.cancel();
+        }
+
+        currentTask = new BukkitRunnable() {
             @Override
             public void run() {
                 if(ConfigManager.getBoolean("파티클_사용여부")) {
@@ -32,7 +39,7 @@ public class ParticleManager {
                     }
                 }
             }
-        }.runTaskTimer(instance, 0, (long) ConfigManager.getInt("파티클_틱_간격"));
+        }.runTaskTimer(instance, 0, 20L * ConfigManager.getInt("파티클_주기"));
     }
 
     public static List<Location> getCropLocation() {
