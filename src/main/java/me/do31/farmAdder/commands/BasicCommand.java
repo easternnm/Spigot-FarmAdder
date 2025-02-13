@@ -102,6 +102,7 @@ public class BasicCommand implements CommandExecutor {
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7/farmadder particle amount <크기>"));
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7/farmadder particle type <파티클 종류>"));
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7/farmadder particle period <초>"));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7/farmadder particle distance <거리>"));
         player.sendMessage("");
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&7Plugin by &6DEOJI_"));
         player.sendMessage("");
@@ -194,6 +195,14 @@ public class BasicCommand implements CommandExecutor {
 
                     ParticleManager.spawnParticle();
 
+                } catch (NumberFormatException e) {
+                    player.sendMessage(ChatColor.RED + "잘못된 값입니다. 숫자만 입력해주세요.");
+                }
+            } else if(args[1].equalsIgnoreCase("distance")) {
+                try {
+                    int distance = Integer.parseInt(args[2]);
+                    ConfigManager.setInt("파티클_최대거리", distance);
+                    player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] 파티클 최대거리가 " + distance + "m로 변경되었습니다."));
                 } catch (NumberFormatException e) {
                     player.sendMessage(ChatColor.RED + "잘못된 값입니다. 숫자만 입력해주세요.");
                 }

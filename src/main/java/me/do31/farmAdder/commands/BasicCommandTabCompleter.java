@@ -31,7 +31,7 @@ public class BasicCommandTabCompleter implements TabCompleter {
             if(args[0].equalsIgnoreCase("give")) {
                 complections.addAll(sender.getServer().getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList()));
             } else if(args[0].equalsIgnoreCase("particle")) {
-                complections.addAll(Arrays.asList("on", "off", "type", "amount", "period"));
+                complections.addAll(Arrays.asList("on", "off", "type", "amount", "period" , "distance"));
             } else if(args[0].equalsIgnoreCase("bonemeal")) {
                 complections.addAll(Arrays.asList("on", "off"));
             }

@@ -4,6 +4,7 @@ import me.do31.farmAdder.FarmAdder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -30,12 +31,18 @@ public class ParticleManager {
                 if(ConfigManager.getBoolean("파티클_사용여부")) {
                     String particleType = ConfigManager.getString("파티클_종류");
                     int particleAmount = ConfigManager.getInt("파티클_갯수");
+                    double maxDistance = ConfigManager.getInt("파티클_최대거리");
                     Particle particle = Particle.valueOf(particleType);
 
                     List<Location> cropLocations = getCropLocation();
-                    for(Location location: cropLocations) {
-                        Location particleLocation = location.add(0.5, 1, 0.5);
-                        location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
+                    for (Player player : Bukkit.getOnlinePlayers()) {
+                        Location playerLocation = player.getLocation();
+                        for (Location location : cropLocations) {
+                            if (location.getWorld().equals(playerLocation.getWorld()) && location.distance(playerLocation) < maxDistance) {
+                            Location particleLocation = location.add(0.5, 1, 0.5);
+                            location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
+                        }
+                            }
                     }
                 }
             }
