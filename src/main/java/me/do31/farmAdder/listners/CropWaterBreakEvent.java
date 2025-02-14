@@ -62,9 +62,9 @@ public class CropWaterBreakEvent implements Listener {
                         }
                     }
                     instance.getDBManager().deleteData("DELETE FROM crops WHERE location = ?", locString);
+                    e.setCancelled(true);
+                    toBlock.setType(Material.AIR);
                 }
-                e.setCancelled(true);
-                toBlock.setType(Material.AIR);
             }
         }
     }
