@@ -7,6 +7,7 @@ import me.do31.farmAdder.utils.StringUtils;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -20,6 +21,10 @@ public class CropBreakEvent implements Listener {
 
     @EventHandler
     public void onHarvest(BlockBreakEvent e) {
+        if (e.isCancelled()) {
+            return;
+        }
+
         Block block = e.getBlock();
         Location loc = block.getLocation();
         String locString = StringUtils.locationToString(loc);
@@ -29,20 +34,24 @@ public class CropBreakEvent implements Listener {
         if (!results.isEmpty()) {
             String cropType = results.get(0)[0];
 
-            if (ConfigManager.getBoolean("씨앗_드랍여부")) {
-                ItemStack seedItem = CropsConfigManager.createSeed(cropType);
-                if (seedItem != null) {
-                    block.getWorld().dropItemNaturally(loc, seedItem);
-                }
-            }
-
             if (block.getBlockData() instanceof Ageable) {
                 Ageable ageable = (Ageable) block.getBlockData();
                 if (ageable.getAge() == ageable.getMaximumAge()) {
-                    List<ItemStack> awards = CropsConfigManager.createAwards(cropType);
+                    Player player = e.getPlayer();
+                    ItemStack tool = player.getInventory().getItemInMainHand();
+                    int fortuneLevel = tool.getEnchantmentLevel(org.bukkit.enchantments.Enchantment.LOOT_BONUS_BLOCKS);
+
+                    List<ItemStack> awards = CropsConfigManager.createAwards(cropType, fortuneLevel);
                     if (awards != null) {
                         for (ItemStack award : awards) {
                             block.getWorld().dropItemNaturally(loc, award);
+                        }
+                    }
+                } else {
+                    if (ConfigManager.getBoolean("씨앗_드랍여부")) {
+                        ItemStack seedItem = CropsConfigManager.createSeed(cropType);
+                        if (seedItem != null) {
+                            block.getWorld().dropItemNaturally(loc, seedItem);
                         }
                     }
                 }

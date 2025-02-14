@@ -13,10 +13,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class CropsConfigManager {
     private static final FarmAdder instance = FarmAdder.getInstance();
@@ -92,7 +90,7 @@ public class CropsConfigManager {
         return seedItem;
     }
 
-    public static List<ItemStack> createAwards(String cropName) {
+    public static List<ItemStack> createAwards(String cropName, int fortuneLevel) {
         FileConfiguration config = cropsConfigs.get(cropName);
         if (config == null) {
             return null;
@@ -105,7 +103,24 @@ public class CropsConfigManager {
                 ConfigurationSection rewardSection = rewardsSection.getConfigurationSection(key);
                 if(rewardSection != null) {
                     Material material = Material.valueOf(rewardSection.getString("id"));
-                    int amount = rewardSection.getInt("amount");
+                    int amount = rewardSection.getInt("amount", 0);
+                    boolean isFortune = rewardSection.getBoolean("fortune", false);
+                    String type = rewardSection.getString("type", "ITEM");
+                    boolean isSeed = type.equalsIgnoreCase("SEED");
+
+                    if(isSeed && !ConfigManager.getBoolean("씨앗_드랍여부")) {
+                        continue;
+                    }
+
+                    if(isFortune) {
+                        if(isSeed) {
+                            int seedAmount = ThreadLocalRandom.current().nextInt(1, 3);
+                            amount += seedAmount + getFortuneBonus(fortuneLevel);
+                        } else {
+                            amount += getFortuneBonus(fortuneLevel);
+                        }
+                    }
+
                     ItemStack awardItem = new ItemStack(material, amount);
                     ItemMeta meta = awardItem.getItemMeta();
                     if(meta != null) {
@@ -135,5 +150,11 @@ public class CropsConfigManager {
             }
         }
         return awards;
+    }
+
+    private static int getFortuneBonus(int fortuneLevel) {
+        if (fortuneLevel <= 0) return 0;
+        int seedAmount = ThreadLocalRandom.current().nextInt(1, fortuneLevel);
+        return seedAmount;
     }
 }

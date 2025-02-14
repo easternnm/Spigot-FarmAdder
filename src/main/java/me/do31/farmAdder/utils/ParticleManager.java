@@ -38,9 +38,9 @@ public class ParticleManager {
                     for (Player player : Bukkit.getOnlinePlayers()) {
                         Location playerLocation = player.getLocation();
                         for (Location location : cropLocations) {
-                            if (location.getWorld().equals(playerLocation.getWorld()) && location.distance(playerLocation) < maxDistance) {
-                            Location particleLocation = location.add(0.5, 1, 0.5);
-                            location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
+                            if (location.getWorld().equals(playerLocation.getWorld()) && playerLocation.distanceSquared(location) < maxDistance * maxDistance) {
+                                Location particleLocation = location.clone().add(0.5, 1, 0.5);
+                                location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
                         }
                             }
                     }

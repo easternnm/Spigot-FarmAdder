@@ -53,7 +53,7 @@ public class CropWaterBreakEvent implements Listener {
                     if (toBlock.getBlockData() instanceof Ageable) {
                         Ageable ageable = (Ageable) toBlock.getBlockData();
                         if (ageable.getAge() == ageable.getMaximumAge()) {
-                            List<ItemStack> awards = CropsConfigManager.createAwards(cropType);
+                            List<ItemStack> awards = CropsConfigManager.createAwards(cropType, 0);
                             if (awards != null) {
                                 for (ItemStack award : awards) {
                                     toBlock.getWorld().dropItemNaturally(loc, award);

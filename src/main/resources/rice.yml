@@ -13,6 +13,9 @@
 # 상점에서 작물을 판매할 때 crop_data 사용합니다.
 # shop.yml에도 동일한 값의 crop_data 입력
 
+# fortune: true로 설정하면 행운 인첸트 효과가 적용됩니다.
+# 씨앗은 type: seed를 포함해야합니다.
+
 crop_data: rice
 
 씨앗:
@@ -24,6 +27,14 @@ crop_data: rice
 
 보상:
   1:
+    id: WHEAT_SEEDS
+    custom_model_data: 1
+    name: "&a볍씨"
+    lore:
+      - "&7쌀의 씨앗"
+    fortune: true
+    type: seed
+  2:
     id: WHEAT
     custom_model_data: 1
     amount: 1
