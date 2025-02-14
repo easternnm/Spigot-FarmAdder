@@ -23,8 +23,8 @@ public class StringUtils {
             String replacedLine = line;
 
             if(line.contains("{price}")) {
-                int price = itemSection.getInt("price");
-                replacedLine = replacedLine.replace("{price}", String.valueOf(price));
+                String price = itemSection.getString("price");
+                replacedLine = replacedLine.replace("{price}", price);
             }
 
             if(line.contains("{balance}")) {
