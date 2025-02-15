@@ -23,6 +23,10 @@ public class CropPlaceEvent implements Listener {
 
     @EventHandler
     public void onPlant(PlayerInteractEvent e) {
+        if(e.isCancelled()) {
+            return;
+        }
+
         if(e.getAction().equals(Action.RIGHT_CLICK_BLOCK) && e.getItem() != null) {
 
             Block clickedBlock = e.getClickedBlock();

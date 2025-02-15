@@ -161,21 +161,25 @@ public class ShopManager {
 
             totalAmount += item.getAmount();
 
+            if(totalAmount == 0) {
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f]&c 인벤토리에 아이템이 존재하지 않습니다."));
+                return;
+            }
+
             if(!isShiftClick) {
                 item.setAmount(item.getAmount() - 1);
                 if(item.getAmount() == 0) {
                     inventory.remove(item);
                 }
                 addMoney(player, price);
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"을 1개 팔았습니다. 수익 " + price + "원"));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 1개 팔았습니다. 수익 " + price + "원"));
                 return;
             } else if(isShiftClick) {
                 inventory.remove(item);
+                addMoney(player, price * totalAmount);
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 " + totalAmount + "개 팔았습니다. 수익 " + price * totalAmount + "원"));
+
             }
-        }
-        if(isShiftClick) {
-            addMoney(player, price * totalAmount);
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"을 " + totalAmount + "개 팔았습니다. 수익 " + price * totalAmount + "원"));
         }
     }
 }
