@@ -8,6 +8,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
@@ -121,6 +122,8 @@ public class ShopManager {
     public static void sellItem(Player player, int key, boolean isShiftClick) {
         Inventory inventory = player.getInventory();
         ConfigurationSection itemSection = shopConfig.getConfigurationSection("gui.items." + key);
+
+        List<ItemStack> sellableItems = new ArrayList<>();
         int totalAmount = 0;
 
         if(!itemSection.contains("price")) {
@@ -159,27 +162,30 @@ public class ShopManager {
                 }
             }
 
+            sellableItems.add(item);
             totalAmount += item.getAmount();
-
-            if(totalAmount == 0) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f]&c 인벤토리에 아이템이 존재하지 않습니다."));
-                return;
-            }
-
-            if(!isShiftClick) {
-                item.setAmount(item.getAmount() - 1);
-                if(item.getAmount() == 0) {
-                    inventory.remove(item);
-                }
-                addMoney(player, price);
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 1개 팔았습니다. 수익 " + price + "원"));
-                return;
-            } else if(isShiftClick) {
-                inventory.remove(item);
-                addMoney(player, price * totalAmount);
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 " + totalAmount + "개 팔았습니다. 수익 " + price * totalAmount + "원"));
-
-            }
         }
+
+        if(sellableItems.isEmpty()) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] &c판매할 아이템이 없습니다."));
+            return;
+        }
+
+        if(!isShiftClick) {
+            ItemStack item = sellableItems.get(0);
+            item.setAmount(item.getAmount() - 1);
+            if(item.getAmount() == 0) {
+                inventory.remove(item);
+            }
+            addMoney(player, price);
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 1개 팔았습니다. 수익 " + price + "원"));
+            return;
+        }
+
+        for(ItemStack item : sellableItems) {
+            inventory.remove(item);
+        }
+        addMoney(player, price * totalAmount);
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 " + totalAmount + "개 팔았습니다. 수익 " + price * totalAmount + "원"));
     }
 }
