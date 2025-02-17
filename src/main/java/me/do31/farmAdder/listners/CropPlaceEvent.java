@@ -23,6 +23,7 @@ public class CropPlaceEvent implements Listener {
 
     @EventHandler
     public void onPlant(PlayerInteractEvent e) {
+
         if(e.isCancelled()) {
             return;
         }

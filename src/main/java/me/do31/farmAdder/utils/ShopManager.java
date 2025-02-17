@@ -178,7 +178,7 @@ public class ShopManager {
                 inventory.remove(item);
             }
             addMoney(player, price);
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 1개 팔았습니다. 수익 " + price + "원"));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 1개 팔았습니다. 수익 " + String.format("%.2f", price) + "원"));
             return;
         }
 
@@ -186,6 +186,6 @@ public class ShopManager {
             inventory.remove(item);
         }
         addMoney(player, price * totalAmount);
-        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 " + totalAmount + "개 팔았습니다. 수익 " + price * totalAmount + "원"));
+        player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] " + name +"를 " + totalAmount + "개 팔았습니다. 수익 " + String.format("%.2f", price * totalAmount) + "원"));
     }
 }
