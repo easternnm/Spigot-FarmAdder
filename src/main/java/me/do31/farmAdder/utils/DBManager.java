@@ -104,6 +104,17 @@ public class DBManager {
         }
     }
 
+    public void insertOrUpdateData(String query, Object... params) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            for (int i = 0; i < params.length; i++) {
+                stmt.setObject(i + 1, params[i]);
+            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     // 연결 닫기
     public void close() {
         try {

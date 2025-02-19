@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFromToEvent;
@@ -29,7 +30,7 @@ public class CropWaterBreakEvent implements Listener {
         if (toBlock.getType() != Material.AIR && belowBlock.getType() == Material.FARMLAND) {
             Block fromBlock = e.getBlock();
 
-            if (fromBlock.getType() == Material.WATER) {
+            if (fromBlock.getType() == Material.WATER || (fromBlock.getBlockData() instanceof Waterlogged && ((Waterlogged) fromBlock.getBlockData()).isWaterlogged())) {
                 Location loc = toBlock.getLocation();
                 String locString = StringUtils.locationToString(loc);
 

@@ -38,6 +38,10 @@ public class CropPlaceEvent implements Listener {
 
             Block belowBlock = placedBlock.getRelative(BlockFace.DOWN);
 
+            if(placedBlock.getType() != Material.AIR) {
+                return;
+            }
+
             ItemStack item = e.getItem();
             if(item.getItemMeta() == null) {
                 return;
@@ -50,13 +54,11 @@ public class CropPlaceEvent implements Listener {
             String cropData = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(instance, "crop_data"), PersistentDataType.STRING);
             String locString = StringUtils.locationToString(placedLocation);
 
-            if(belowBlock.getType() == Material.FARMLAND) {
-                List<String[]> results = instance.getDBManager().selectData("SELECT crop FROM crops WHERE location = ?", locString);
-                if (!results.isEmpty()) {
-                    instance.getDBManager().updateData("UPDATE crops SET crop = ? WHERE location = ?", cropData, locString);
-                } else {
-                    instance.getDBManager().insertData("crops", "location, crop", "?, ?", locString, cropData);
-                }
+            if (belowBlock.getType() == Material.FARMLAND) {
+                instance.getDBManager().insertOrUpdateData(
+                        "INSERT OR REPLACE INTO crops (location, crop) VALUES (?, ?)",
+                        locString, cropData
+                );
             }
         }
     }
