@@ -1,4 +1,5 @@
-package me.do31.farmAdder.listners;
+
+package me.do31.farmAdder.listeners;
 
 import me.do31.farmAdder.FarmAdder;
 import me.do31.farmAdder.utils.ConfigManager;
