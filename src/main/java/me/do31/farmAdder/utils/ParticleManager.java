@@ -4,6 +4,8 @@ import me.do31.farmAdder.FarmAdder;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.Ageable;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -13,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ParticleManager {
@@ -35,6 +38,19 @@ public class ParticleManager {
                     Particle particle = Particle.valueOf(particleType);
 
                     List<Location> cropLocations = getCropLocation();
+                    Iterator<Location> iterator = cropLocations.iterator();
+
+                    while (iterator.hasNext()) {
+                        Location location = iterator.next();
+                        Block block = location.getBlock();
+
+                        // 블록이 Ageable(성장 가능한 작물)인지 확인
+                        if (!(block.getBlockData() instanceof Ageable)) {
+                            instance.getDBManager().deleteData("DELETE FROM crops WHERE location = ?", StringUtils.locationToString(location));
+                            iterator.remove(); // 리스트에서 제거하여 반복문에서 제외
+                        }
+                    }
+
                     for (Player player : Bukkit.getOnlinePlayers()) {
                         Location playerLocation = player.getLocation();
                         for (Location location : cropLocations) {

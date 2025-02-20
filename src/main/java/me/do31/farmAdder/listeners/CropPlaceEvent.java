@@ -1,17 +1,20 @@
 package me.do31.farmAdder.listeners;
 
 import me.do31.farmAdder.FarmAdder;
+import me.do31.farmAdder.utils.CropsConfigManager;
 import me.do31.farmAdder.utils.StringUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.Ageable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Crops;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
@@ -65,6 +68,7 @@ public class CropPlaceEvent implements Listener {
             }
 
             String cropData = item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(instance, "crop_data"), PersistentDataType.STRING);
+
             String locString = StringUtils.locationToString(placedLocation);
 
             if (belowBlock.getType() == Material.FARMLAND) {
