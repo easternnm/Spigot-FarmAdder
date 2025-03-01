@@ -10,6 +10,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
@@ -20,11 +21,8 @@ public class CropBreakEvent implements Listener {
 
     private static final FarmAdder instance = FarmAdder.getInstance();
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onHarvest(BlockBreakEvent e) {
-        if (e.isCancelled()) {
-            return;
-        }
 
         Block block = e.getBlock();
         Location loc = block.getLocation();
