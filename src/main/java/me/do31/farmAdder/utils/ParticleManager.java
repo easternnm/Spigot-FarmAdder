@@ -2,6 +2,7 @@ package me.do31.farmAdder.utils;
 
 import me.do31.farmAdder.FarmAdder;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
@@ -14,9 +15,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class ParticleManager {
 
@@ -24,41 +23,55 @@ public class ParticleManager {
     private static BukkitTask currentTask;
 
     public static void spawnParticle() {
-        if(currentTask != null && !currentTask.isCancelled()) {
+        if (currentTask != null && !currentTask.isCancelled()) {
             currentTask.cancel();
         }
 
         currentTask = new BukkitRunnable() {
             @Override
             public void run() {
-                if(ConfigManager.getBoolean("파티클_사용여부")) {
+                if (ConfigManager.getBoolean("파티클_사용여부")) {
                     String particleType = ConfigManager.getString("파티클_종류");
                     int particleAmount = ConfigManager.getInt("파티클_갯수");
-                    double maxDistance = ConfigManager.getInt("파티클_최대거리");
+                    double maxDistanceSquared = Math.pow(ConfigManager.getInt("파티클_최대거리"), 2);
                     Particle particle = Particle.valueOf(particleType);
 
                     List<Location> cropLocations = getCropLocation();
-                    Iterator<Location> iterator = cropLocations.iterator();
+                    List<String> locationsToDelete = new ArrayList<>();
+                    Map<Chunk, List<Location>> chunkMap = new HashMap<>();
 
+                    // 데이터베이스 삭제 최적화 (삭제할 위치를 한 번에 모아서 삭제)
+                    Iterator<Location> iterator = cropLocations.iterator();
                     while (iterator.hasNext()) {
                         Location location = iterator.next();
                         Block block = location.getBlock();
-
-                        // 블록이 Ageable(성장 가능한 작물)인지 확인
                         if (!(block.getBlockData() instanceof Ageable)) {
-                            instance.getDBManager().deleteData("DELETE FROM crops WHERE location = ?", StringUtils.locationToString(location));
-                            iterator.remove(); // 리스트에서 제거하여 반복문에서 제외
+                            locationsToDelete.add(StringUtils.locationToString(location));
+                            iterator.remove();
+                        } else {
+                            chunkMap.computeIfAbsent(location.getChunk(), k -> new ArrayList<>()).add(location);
                         }
                     }
 
+                    if (!locationsToDelete.isEmpty()) {
+                        instance.getDBManager().deleteData("DELETE FROM crops WHERE location IN (" +
+                                        String.join(",", Collections.nCopies(locationsToDelete.size(), "?")) + ")",
+                                locationsToDelete.toArray());
+                    }
+
+                    // 최적화된 플레이어-작물 거리 계산
                     for (Player player : Bukkit.getOnlinePlayers()) {
                         Location playerLocation = player.getLocation();
-                        for (Location location : cropLocations) {
-                            if (location.getWorld().equals(playerLocation.getWorld()) && playerLocation.distanceSquared(location) < maxDistance * maxDistance) {
+                        Chunk playerChunk = playerLocation.getChunk();
+
+                        List<Location> nearbyCrops = chunkMap.getOrDefault(playerChunk, Collections.emptyList());
+                        for (Location location : nearbyCrops) {
+                            if (playerLocation.getWorld().equals(location.getWorld()) &&
+                                    playerLocation.distanceSquared(location) < maxDistanceSquared) {
                                 Location particleLocation = location.clone().add(0.5, 1, 0.5);
                                 location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
-                        }
                             }
+                        }
                     }
                 }
             }
