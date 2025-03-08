@@ -40,10 +40,15 @@ public class ParticleManager {
                     List<String> locationsToDelete = new ArrayList<>();
                     Map<Chunk, List<Location>> chunkMap = new HashMap<>();
 
-                    // 데이터베이스 삭제 최적화 (삭제할 위치를 한 번에 모아서 삭제)
+                    // ✅ 동기 청크 로드 방지
                     Iterator<Location> iterator = cropLocations.iterator();
                     while (iterator.hasNext()) {
                         Location location = iterator.next();
+
+                        if (!location.getChunk().isLoaded()) {
+                            continue; // 비로드 청크 무시
+                        }
+
                         Block block = location.getBlock();
                         if (!(block.getBlockData() instanceof Ageable)) {
                             locationsToDelete.add(StringUtils.locationToString(location));
@@ -59,17 +64,38 @@ public class ParticleManager {
                                 locationsToDelete.toArray());
                     }
 
-                    // 최적화된 플레이어-작물 거리 계산
+                    // ✅ 플레이어 주변 청크 저장
+                    Map<UUID, Set<Chunk>> playerChunks = new HashMap<>();
                     for (Player player : Bukkit.getOnlinePlayers()) {
-                        Location playerLocation = player.getLocation();
-                        Chunk playerChunk = playerLocation.getChunk();
+                        Chunk baseChunk = player.getLocation().getChunk();
+                        Set<Chunk> nearbyChunks = new HashSet<>();
 
-                        List<Location> nearbyCrops = chunkMap.getOrDefault(playerChunk, Collections.emptyList());
-                        for (Location location : nearbyCrops) {
-                            if (playerLocation.getWorld().equals(location.getWorld()) &&
-                                    playerLocation.distanceSquared(location) < maxDistanceSquared) {
-                                Location particleLocation = location.clone().add(0.5, 1, 0.5);
-                                location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
+                        // 주변 3x3 청크까지 추가 (자신 포함 9청크)
+                        for (int dx = -1; dx <= 1; dx++) {
+                            for (int dz = -1; dz <= 1; dz++) {
+                                Chunk nearbyChunk = baseChunk.getWorld().getChunkAt(baseChunk.getX() + dx, baseChunk.getZ() + dz);
+                                nearbyChunks.add(nearbyChunk);
+                            }
+                        }
+                        playerChunks.put(player.getUniqueId(), nearbyChunks);
+                    }
+
+                    // ✅ 플레이어 근처 청크의 작물만 확인 & 거리 필터링 추가
+                    for (Map.Entry<Chunk, List<Location>> entry : chunkMap.entrySet()) {
+                        Chunk cropChunk = entry.getKey();
+                        List<Location> cropLocationsList = entry.getValue();
+
+                        for (Player player : Bukkit.getOnlinePlayers()) {
+                            if (playerChunks.getOrDefault(player.getUniqueId(), Collections.emptySet()).contains(cropChunk)) {
+                                Location playerLocation = player.getLocation();
+
+                                for (Location location : cropLocationsList) {
+                                    if (playerLocation.getWorld().equals(location.getWorld()) &&
+                                            playerLocation.distanceSquared(location) < maxDistanceSquared) {
+                                        Location particleLocation = location.clone().add(0.5, 1, 0.5);
+                                        location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
+                                    }
+                                }
                             }
                         }
                     }
@@ -77,6 +103,7 @@ public class ParticleManager {
             }
         }.runTaskTimer(instance, 0, 20L * ConfigManager.getInt("파티클_주기"));
     }
+
 
     public static List<Location> getCropLocation() {
         List<Location> locations = new ArrayList<>();
