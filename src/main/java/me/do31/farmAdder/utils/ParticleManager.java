@@ -36,73 +36,61 @@ public class ParticleManager {
                     double maxDistanceSquared = Math.pow(ConfigManager.getInt("파티클_최대거리"), 2);
                     Particle particle = Particle.valueOf(particleType);
 
-                    List<Location> cropLocations = getCropLocation();
-                    List<String> locationsToDelete = new ArrayList<>();
-                    Map<Chunk, List<Location>> chunkMap = new HashMap<>();
+                    // ✅ 비동기적으로 작물 위치 가져오기 (렉 방지)
+                    Bukkit.getScheduler().runTaskAsynchronously(instance, () -> {
+                        List<Location> cropLocations = getCropLocation();
+                        List<String> locationsToDelete = new ArrayList<>();
+                        Map<Chunk, List<Location>> chunkMap = new HashMap<>();
 
-                    // ✅ 동기 청크 로드 방지
-                    Iterator<Location> iterator = cropLocations.iterator();
-                    while (iterator.hasNext()) {
-                        Location location = iterator.next();
+                        // ✅ 동기 청크 로드 방지 및 데이터 캐싱
+                        for (Location location : cropLocations) {
+                            Chunk chunk = location.getChunk();
+                            if (!chunk.isLoaded()) continue; // 비로드 청크는 무시
 
-                        if (!location.getChunk().isLoaded()) {
-                            continue; // 비로드 청크 무시
-                        }
-
-                        Block block = location.getBlock();
-                        if (!(block.getBlockData() instanceof Ageable)) {
-                            locationsToDelete.add(StringUtils.locationToString(location));
-                            iterator.remove();
-                        } else {
-                            chunkMap.computeIfAbsent(location.getChunk(), k -> new ArrayList<>()).add(location);
-                        }
-                    }
-
-                    if (!locationsToDelete.isEmpty()) {
-                        instance.getDBManager().deleteData("DELETE FROM crops WHERE location IN (" +
-                                        String.join(",", Collections.nCopies(locationsToDelete.size(), "?")) + ")",
-                                locationsToDelete.toArray());
-                    }
-
-                    // ✅ 플레이어 주변 청크 저장
-                    Map<UUID, Set<Chunk>> playerChunks = new HashMap<>();
-                    for (Player player : Bukkit.getOnlinePlayers()) {
-                        Chunk baseChunk = player.getLocation().getChunk();
-                        Set<Chunk> nearbyChunks = new HashSet<>();
-
-                        // 주변 3x3 청크까지 추가 (자신 포함 9청크)
-                        for (int dx = -1; dx <= 1; dx++) {
-                            for (int dz = -1; dz <= 1; dz++) {
-                                Chunk nearbyChunk = baseChunk.getWorld().getChunkAt(baseChunk.getX() + dx, baseChunk.getZ() + dz);
-                                nearbyChunks.add(nearbyChunk);
+                            Block block = location.getBlock();
+                            if (!(block.getBlockData() instanceof Ageable)) {
+                                locationsToDelete.add(StringUtils.locationToString(location));
+                            } else {
+                                chunkMap.computeIfAbsent(chunk, k -> new ArrayList<>()).add(location);
                             }
                         }
-                        playerChunks.put(player.getUniqueId(), nearbyChunks);
-                    }
 
-                    // ✅ 플레이어 근처 청크의 작물만 확인 & 거리 필터링 추가
-                    for (Map.Entry<Chunk, List<Location>> entry : chunkMap.entrySet()) {
-                        Chunk cropChunk = entry.getKey();
-                        List<Location> cropLocationsList = entry.getValue();
+                        // ✅ 데이터베이스에서 한번에 삭제
+                        if (!locationsToDelete.isEmpty()) {
+                            instance.getDBManager().deleteData("DELETE FROM crops WHERE location IN (" +
+                                            String.join(",", Collections.nCopies(locationsToDelete.size(), "?")) + ")",
+                                    locationsToDelete.toArray());
+                        }
 
-                        for (Player player : Bukkit.getOnlinePlayers()) {
-                            if (playerChunks.getOrDefault(player.getUniqueId(), Collections.emptySet()).contains(cropChunk)) {
+                        // ✅ 메인 스레드에서 플레이어 검사 실행
+                        Bukkit.getScheduler().runTask(instance, () -> {
+                            for (Player player : Bukkit.getOnlinePlayers()) {
                                 Location playerLocation = player.getLocation();
+                                Chunk playerChunk = playerLocation.getChunk();
 
-                                for (Location location : cropLocationsList) {
-                                    if (playerLocation.getWorld().equals(location.getWorld()) &&
-                                            playerLocation.distanceSquared(location) < maxDistanceSquared) {
-                                        Location particleLocation = location.clone().add(0.5, 1, 0.5);
-                                        location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
+                                for (int dx = -1; dx <= 1; dx++) {
+                                    for (int dz = -1; dz <= 1; dz++) {
+                                        Chunk nearbyChunk = playerChunk.getWorld().getChunkAt(playerChunk.getX() + dx, playerChunk.getZ() + dz);
+
+                                        if (chunkMap.containsKey(nearbyChunk)) {
+                                            for (Location location : chunkMap.get(nearbyChunk)) {
+                                                if (playerLocation.getWorld().equals(location.getWorld()) &&
+                                                        playerLocation.distanceSquared(location) < maxDistanceSquared) {
+                                                    Location particleLocation = location.clone().add(0.5, 1, 0.5);
+                                                    location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }
+                        });
+                    });
                 }
             }
         }.runTaskTimer(instance, 0, 20L * ConfigManager.getInt("파티클_주기"));
     }
+
 
 
     public static List<Location> getCropLocation() {
