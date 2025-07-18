@@ -1,49 +1,66 @@
 package me.do31.farmAdder.utils;
 
-import java.sql.*;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DBManager {
-    private Connection connection;
-    private final String dbUrl;
 
-    // 생성자에서 DB 경로 설정
-    public DBManager(String dbPath) {
-        this.dbUrl = "jdbc:sqlite:" + dbPath;
-        connect();
+    private final HikariDataSource dataSource;
+
+    public DBManager() {
+        HikariConfig config = new HikariConfig();
+        String dbType = ConfigManager.getString("database.type");
+
+        if (dbType.equalsIgnoreCase("mysql")) {
+            config.setJdbcUrl("jdbc:mysql://" + ConfigManager.getString("database.address") + ":" + ConfigManager.getInt("database.port") + "/" + ConfigManager.getString("database.database"));
+            config.setUsername(ConfigManager.getString("database.username"));
+            config.setPassword(ConfigManager.getString("database.password"));
+        } else { // Default to SQLite
+            config.setJdbcUrl("jdbc:sqlite:" + ConfigManager.getString("database.file"));
+        }
+
+        config.setMaximumPoolSize(ConfigManager.getInt("database.pool-size", 10));
+        config.setConnectionTimeout(ConfigManager.getInt("database.connection-timeout", 30000));
+        config.setIdleTimeout(ConfigManager.getInt("database.idle-timeout", 600000));
+        config.setMaxLifetime(ConfigManager.getInt("database.max-lifetime", 1800000));
+
+        this.dataSource = new HikariDataSource(config);
+        setupDatabase();
     }
 
-    // 연결 유지 및 자동 복구
-    private void connect() {
-        try {
-            if (connection == null || connection.isClosed()) {
-                connection = DriverManager.getConnection(dbUrl);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+
+    public void close() {
+        if (dataSource != null && !dataSource.isClosed()) {
+            dataSource.close();
         }
     }
 
-    public Connection getConnection() {
-        connect(); // 항상 연결 유지
-        return connection;
+    public void setupDatabase() {
+        createTable("crops", "id INTEGER PRIMARY KEY AUTO_INCREMENT, location TEXT, crop TEXT");
     }
 
-    // 테이블 생성
     public void createTable(String tableName, String tableSchema) {
         String sql = "CREATE TABLE IF NOT EXISTS " + tableName + " (" + tableSchema + ")";
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.execute();
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
-    // 데이터 삽입
     public void insertData(String tableName, String columns, String values, Object... params) {
         String sql = "INSERT INTO " + tableName + " (" + columns + ") VALUES (" + values + ")";
-        try (PreparedStatement stmt = getConnection().prepareStatement(sql)) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
             }
@@ -53,9 +70,8 @@ public class DBManager {
         }
     }
 
-    // 데이터 수정
     public int updateData(String query, Object... params) {
-        try (PreparedStatement stmt = getConnection().prepareStatement(query)) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
             }
@@ -66,10 +82,9 @@ public class DBManager {
         }
     }
 
-    // 데이터 조회 (ResultSet이 아니라 리스트로 반환)
     public List<String[]> selectData(String query, Object... params) {
         List<String[]> results = new ArrayList<>();
-        try (PreparedStatement stmt = getConnection().prepareStatement(query)) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
             }
@@ -89,12 +104,11 @@ public class DBManager {
         return results;
     }
 
-    // 데이터 삭제 (WHERE 절 검증 추가)
     public void deleteData(String query, Object... params) {
         if (!query.toLowerCase().contains("where")) {
             throw new IllegalArgumentException("[DB] DELETE 실행 시 WHERE 조건이 필요합니다.");
         }
-        try (PreparedStatement stmt = getConnection().prepareStatement(query)) {
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
             }
@@ -113,21 +127,5 @@ public class DBManager {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
-
-    // 연결 닫기
-    public void close() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    public void setupDatabase() {
-        createTable("crops", "id INTEGER PRIMARY KEY, location TEXT, crop TEXT");
     }
 }

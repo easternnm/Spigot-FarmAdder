@@ -42,6 +42,10 @@ public class ConfigManager {
         return config.getInt(path);
     }
 
+    public static int getInt(String path, int defaultValue) {
+        return config.getInt(path, defaultValue);
+    }
+
     public static boolean getBoolean(String path) {
         return config.getBoolean(path);
     }

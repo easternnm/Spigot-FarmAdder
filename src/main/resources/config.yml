@@ -19,3 +19,35 @@
 파티클_갯수: 1
 파티클_주기: 1
 파티클_최대거리: 50
+
+################################################################################################
+#                                       Database Settings                                      #
+################################################################################################
+# database.type: 'sqlite' 또는 'mysql' 로 설정할 수 있습니다.
+# SQLite 사용 시:
+#   database.file: 데이터베이스 파일 경로를 지정합니다. (예: 'plugins/FarmAdder/farm_data.db')
+# MySQL 사용 시:
+#   database.address: 데이터베이스 서버 주소
+#   database.port: 데이터베이스 포트
+#   database.database: 사용할 데이터베이스 이름
+#   database.username: 데이터베이스 사용자 이름
+#   database.password: 데이터베이스 비밀번호
+#
+# HikariCP (Connection Pool) 설정:
+#   database.pool-size: 최대 커넥션 풀 크기 (기본값: 10)
+#   database.connection-timeout: 커넥션 타임아웃 (밀리초, 기본값: 30000)
+#   database.idle-timeout: 유휴 커넥션 타임아웃 (밀리초, 기본값: 600000)
+#   database.max-lifetime: 커넥션 최대 수명 (밀리초, 기본값: 1800000)
+database:
+  type: 'sqlite'
+  file: 'plugins/FarmAdder/FarmAdder.db'
+  # type: 'mysql'
+  # address: 'localhost'
+  # port: 3306
+  # database: 'minecraft'
+  # username: 'user'
+  # password: 'password'
+  pool-size: 10
+  connection-timeout: 30000
+  idle-timeout: 600000
+  max-lifetime: 1800000

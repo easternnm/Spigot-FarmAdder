@@ -7,14 +7,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public final class FarmAdder extends JavaPlugin {
     private static FarmAdder instance;
-    private final DBManager dbManager = new DBManager("plugins/FarmAdder/FarmAdder.db");
+    private DBManager dbManager;
 
     public static FarmAdder getInstance() {
         return instance;
     }
 
-    public static DBManager getDBManager() {
-        return instance.dbManager;
+    public DBManager getDBManager() {
+        return dbManager;
     }
 
     @Override
@@ -22,7 +22,7 @@ public final class FarmAdder extends JavaPlugin {
         instance = this;
         ConfigManager.loadConfig();
 
-        dbManager.setupDatabase();
+        dbManager = new DBManager();
 
         getCommand("farmadder").setExecutor(new BasicCommand());
         getCommand("farmadder").setTabCompleter(new BasicCommandTabCompleter());
