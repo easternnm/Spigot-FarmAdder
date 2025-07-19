@@ -76,6 +76,8 @@ public class CropPlaceEvent implements Listener {
                         "INSERT OR REPLACE INTO crops (location, crop) VALUES (?, ?)",
                         locString, cropData
                 );
+                // Add to cache
+                instance.getCropLocations().put(locString, cropData);
             }
         }
     }

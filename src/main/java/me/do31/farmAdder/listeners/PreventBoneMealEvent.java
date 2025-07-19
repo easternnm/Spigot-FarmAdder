@@ -1,6 +1,7 @@
 package me.do31.farmAdder.listeners;
 
 import me.do31.farmAdder.FarmAdder;
+import me.do31.farmAdder.utils.ConfigManager;
 import me.do31.farmAdder.utils.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -44,7 +45,7 @@ public class PreventBoneMealEvent implements Listener {
         List<String[]> results = instance.getDBManager().selectData("SELECT crop FROM crops WHERE location = ?", locString);
 
         // 특정 작물에 뼛가루 사용 차단
-        if (!results.isEmpty() && !instance.getConfig().getBoolean("뼛가루_사용여부") && !e.getPlayer().isOp()) {
+        if (!results.isEmpty() && !ConfigManager.BONE_MEAL_ENABLED && !e.getPlayer().isOp()) {
             e.setCancelled(true);
             e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&c⚠ 이 농작물에는 뼛가루를 사용할 수 없습니다. ⚠"));
         }
@@ -55,7 +56,7 @@ public class PreventBoneMealEvent implements Listener {
         ItemStack item = e.getItem();
 
         // 뼛가루인지 확인 & 설정에서 사용 가능 여부 확인
-        if (item.getType() == Material.BONE_MEAL && !instance.getConfig().getBoolean("뼛가루_사용여부")) {
+        if (item.getType() == Material.BONE_MEAL && !ConfigManager.BONE_MEAL_ENABLED) {
             Block dispenserBlock = e.getBlock();
 
             // 디스펜서인지 확인

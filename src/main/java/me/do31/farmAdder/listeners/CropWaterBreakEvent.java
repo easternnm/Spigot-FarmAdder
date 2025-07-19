@@ -35,17 +35,14 @@ public class CropWaterBreakEvent implements Listener {
                 Location loc = toBlock.getLocation();
                 String locString = StringUtils.locationToString(loc);
 
-                List<String[]> results = instance.getDBManager().selectData("SELECT crop FROM crops WHERE location = ?", locString);
+                String cropType = instance.getCropLocations().get(locString);
 
-                if (!results.isEmpty()) {
-                    String cropType = results.get(0)[0];
-
-                    if(!ConfigManager.getBoolean("물_농작물_수확")) {
+                if (cropType != null) {
+                    if(!ConfigManager.WATER_CROP_HARVEST) {
                         return;
                     }
 
-
-                    if (instance.getConfig().getBoolean("씨앗_드랍여부")) {
+                    if (ConfigManager.DROP_SEEDS) {
                         ItemStack seedItem = CropsConfigManager.createSeed(cropType);
                         if (seedItem != null) {
                             toBlock.getWorld().dropItemNaturally(loc, seedItem);
@@ -63,7 +60,10 @@ public class CropWaterBreakEvent implements Listener {
                             }
                         }
                     }
-                    instance.getDBManager().deleteData("DELETE FROM crops WHERE location = ?", locString);
+                    // DB에서 즉시 삭제하는 대신, 삭제 대기열에 추가
+                    instance.getWaterBreakDeletionQueue().add(locString);
+                    // 캐시에서는 즉시 제거하여 게임 내 상태와 일치시킴
+                    instance.getCropLocations().remove(locString);
                     e.setCancelled(true);
                     toBlock.setType(Material.AIR);
                 }

@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class DBManager {
@@ -46,7 +47,7 @@ public class DBManager {
     }
 
     public void setupDatabase() {
-        createTable("crops", "id INTEGER PRIMARY KEY AUTO_INCREMENT, location TEXT, crop TEXT");
+        createTable("crops", "id INTEGER PRIMARY KEY AUTOINCREMENT, location TEXT, crop TEXT");
     }
 
     public void createTable(String tableName, String tableSchema) {
@@ -111,6 +112,23 @@ public class DBManager {
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             for (int i = 0; i < params.length; i++) {
                 stmt.setObject(i + 1, params[i]);
+            }
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteBatchData(List<String> locations) {
+        if (locations == null || locations.isEmpty()) {
+            return;
+        }
+
+        String query = "DELETE FROM crops WHERE location IN (" + String.join(",", Collections.nCopies(locations.size(), "?")) + ")";
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
+            for (int i = 0; i < locations.size(); i++) {
+                stmt.setString(i + 1, locations.get(i));
             }
             stmt.executeUpdate();
         } catch (SQLException e) {

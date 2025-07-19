@@ -36,10 +36,9 @@ public class CropBreakEvent implements Listener {
 
         // 위 블록이 작물인 경우
         if (upperBlock.getBlockData() instanceof Ageable) {
-            List<String[]> results = instance.getDBManager().selectData("SELECT crop FROM crops WHERE location = ?", locUpperString);
+            String cropType = instance.getCropLocations().get(locUpperString);
 
-            if (!results.isEmpty()) {
-                String cropType = results.get(0)[0];
+            if (cropType != null) {
                 Ageable ageable = (Ageable) upperBlock.getBlockData();
 
                 Player player = e.getPlayer();
@@ -55,7 +54,7 @@ public class CropBreakEvent implements Listener {
                         }
                     }
                 } else {
-                    if (ConfigManager.getBoolean("씨앗_드랍여부")) {
+                    if (ConfigManager.DROP_SEEDS) {
                         ItemStack seedItem = CropsConfigManager.createSeed(cropType);
                         if (seedItem != null) {
                             upperBlock.getWorld().dropItemNaturally(locUpper, seedItem);
@@ -69,15 +68,14 @@ public class CropBreakEvent implements Listener {
 
                 // 데이터 삭제
                 instance.getDBManager().deleteData("DELETE FROM crops WHERE location = ?", locUpperString);
+                instance.getCropLocations().remove(locUpperString); // 캐시에서 제거
             }
         }
 
         // 원래 작물 블록을 부순 경우의 처리
-        List<String[]> results = instance.getDBManager().selectData("SELECT crop FROM crops WHERE location = ?", locString);
+        String cropType = instance.getCropLocations().get(locString);
 
-        if (!results.isEmpty()) {
-            String cropType = results.get(0)[0];
-
+        if (cropType != null) {
             if (block.getBlockData() instanceof Ageable) {
                 Ageable ageable = (Ageable) block.getBlockData();
                 Player player = e.getPlayer();
@@ -92,7 +90,7 @@ public class CropBreakEvent implements Listener {
                         }
                     }
                 } else {
-                    if (ConfigManager.getBoolean("씨앗_드랍여부")) {
+                    if (ConfigManager.DROP_SEEDS) {
                         ItemStack seedItem = CropsConfigManager.createSeed(cropType);
                         if (seedItem != null) {
                             block.getWorld().dropItemNaturally(loc, seedItem);
@@ -102,6 +100,7 @@ public class CropBreakEvent implements Listener {
 
                 e.setDropItems(false); // 작물 블록은 드랍하지 않음
                 instance.getDBManager().deleteData("DELETE FROM crops WHERE location = ?", locString);
+                instance.getCropLocations().remove(locString); // 캐시에서 제거
             }
         }
 
