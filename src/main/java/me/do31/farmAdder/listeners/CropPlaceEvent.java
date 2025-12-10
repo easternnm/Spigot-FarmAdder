@@ -9,6 +9,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.block.data.Waterlogged;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
@@ -50,11 +51,13 @@ public class CropPlaceEvent implements Listener {
 
             Block belowBlock = placedBlock.getRelative(BlockFace.DOWN);
 
+            boolean isWater = placedBlock.getType() == Material.WATER || (placedBlock.getBlockData() instanceof Waterlogged && ((Waterlogged) placedBlock.getBlockData()).isWaterlogged());
+
             if (INTERACTIVE_BLOCKS.contains(clickedBlock.getType()) && !e.getPlayer().isSneaking()) {
                 return;
             }
 
-            if(placedBlock.getType() != Material.AIR) {
+            if(placedBlock.getType() != Material.AIR && !isWater) {
                 return;
             }
 
@@ -76,7 +79,6 @@ public class CropPlaceEvent implements Listener {
                         "INSERT OR REPLACE INTO crops (location, crop) VALUES (?, ?)",
                         locString, cropData
                 );
-                // Add to cache
                 instance.getCropLocations().put(locString, cropData);
             }
         }
