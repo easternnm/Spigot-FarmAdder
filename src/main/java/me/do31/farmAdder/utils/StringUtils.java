@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
-
 public class StringUtils {
 
     public static String locationToString(Location location) {
@@ -37,6 +36,34 @@ public class StringUtils {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    public static String chunkKey(Location location) {
+        return chunkKey(location.getWorld().getName(), location.getBlockX(), location.getBlockZ());
+    }
+
+    public static String chunkKey(String locString) {
+        if (locString == null || locString.isEmpty()) {
+            return null;
+        }
+        String[] parts = locString.split(",");
+        if (parts.length != 4) {
+            return null;
+        }
+        try {
+            String world = parts[0];
+            int x = Integer.parseInt(parts[1]);
+            int z = Integer.parseInt(parts[3]);
+            return chunkKey(world, x, z);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static String chunkKey(String world, int blockX, int blockZ) {
+        int chunkX = blockX >> 4;
+        int chunkZ = blockZ >> 4;
+        return world + ":" + chunkX + ":" + chunkZ;
     }
 
     public static List<String> replacePlaceholders(List<String> lore, ConfigurationSection itemSection, Player player) {

@@ -61,9 +61,9 @@ public class CropWaterBreakEvent implements Listener {
                         }
                     }
                     // DB에서 즉시 삭제하는 대신, 삭제 대기열에 추가
-                    instance.getWaterBreakDeletionQueue().add(locString);
+                    instance.queueDelete(locString);
                     // 캐시에서는 즉시 제거하여 게임 내 상태와 일치시킴
-                    instance.getCropLocations().remove(locString);
+                    instance.removeCropFromCache(locString);
                     e.setCancelled(true);
                     toBlock.setType(Material.AIR);
                 }

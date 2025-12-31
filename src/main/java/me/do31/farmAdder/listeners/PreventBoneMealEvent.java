@@ -16,8 +16,6 @@ import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-
 public class PreventBoneMealEvent implements Listener {
 
     private static final FarmAdder instance = FarmAdder.getInstance();
@@ -40,14 +38,13 @@ public class PreventBoneMealEvent implements Listener {
             return;
         }
 
-        // 위치를 문자열로 변환하여 데이터베이스 조회
+        // 위치를 문자열로 변환하여 캐시 조회
         String locString = StringUtils.locationToString(block.getLocation());
-        List<String[]> results = instance.getDBManager().selectData("SELECT crop FROM crops WHERE location = ?", locString);
 
         // 특정 작물에 뼛가루 사용 차단
-        if (!results.isEmpty() && !ConfigManager.BONE_MEAL_ENABLED && !e.getPlayer().isOp()) {
+        if (instance.getCropLocations().containsKey(locString) && !ConfigManager.BONE_MEAL_ENABLED && !e.getPlayer().isOp()) {
             e.setCancelled(true);
-            e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&c⚠ 이 농작물에는 뼛가루를 사용할 수 없습니다. ⚠"));
+            e.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', "&c이 농작물에는 뼛가루를 사용할 수 없습니다."));
         }
     }
 
@@ -68,12 +65,11 @@ public class PreventBoneMealEvent implements Listener {
             BlockFace facing = ((Directional) dispenserBlock.getBlockData()).getFacing();
             Block targetBlock = dispenserBlock.getRelative(facing);
 
-            // 위치를 문자열로 변환하여 데이터베이스 조회
+            // 위치를 문자열로 변환하여 캐시 조회
             String locString = StringUtils.locationToString(targetBlock.getLocation());
-            List<String[]> results = instance.getDBManager().selectData("SELECT crop FROM crops WHERE location = ?", locString);
 
             // 특정 작물에 뼛가루 사용 차단
-            if (!results.isEmpty() && !instance.getConfig().getBoolean("뼛가루_사용여부")) {
+            if (instance.getCropLocations().containsKey(locString) && !instance.getConfig().getBoolean("뼛가루_사용여부")) {
                 e.setCancelled(true);
             }
         }

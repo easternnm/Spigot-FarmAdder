@@ -68,6 +68,10 @@ public class BasicCommand implements CommandExecutor {
             }
         }
         if(args[0].equalsIgnoreCase("bonemeal")) {
+            if(args.length < 2) {
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&c사용법: /farmadder bonemeal <on/off>"));
+                return true;
+            }
             if(args[1].equalsIgnoreCase("on")) {
                 ConfigManager.setBoolean("뼛가루_사용여부", true);
                 sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] 뼛가루 사용이 활성화 되었습니다."));

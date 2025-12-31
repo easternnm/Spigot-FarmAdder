@@ -75,11 +75,8 @@ public class CropPlaceEvent implements Listener {
             String locString = StringUtils.locationToString(placedLocation);
 
             if (belowBlock.getType() == Material.FARMLAND) {
-                instance.getDBManager().insertOrUpdateData(
-                        "INSERT OR REPLACE INTO crops (location, crop) VALUES (?, ?)",
-                        locString, cropData
-                );
-                instance.getCropLocations().put(locString, cropData);
+                instance.queueInsert(locString, cropData);
+                instance.addCropToCache(locString, cropData);
             }
         }
     }

@@ -67,8 +67,8 @@ public class CropBreakEvent implements Listener {
                 isCropRemoved = true;
 
                 // 데이터 삭제
-                instance.getDBManager().deleteData("DELETE FROM crops WHERE location = ?", locUpperString);
-                instance.getCropLocations().remove(locUpperString); // 캐시에서 제거
+                instance.queueDelete(locUpperString);
+                instance.removeCropFromCache(locUpperString); // 캐시에서 제거
             }
         }
 
@@ -99,8 +99,8 @@ public class CropBreakEvent implements Listener {
                 }
 
                 e.setDropItems(false); // 작물 블록은 드랍하지 않음
-                instance.getDBManager().deleteData("DELETE FROM crops WHERE location = ?", locString);
-                instance.getCropLocations().remove(locString); // 캐시에서 제거
+                instance.queueDelete(locString);
+                instance.removeCropFromCache(locString); // 캐시에서 제거
             }
         }
 

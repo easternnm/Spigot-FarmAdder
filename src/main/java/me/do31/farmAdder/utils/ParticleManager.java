@@ -5,22 +5,20 @@ import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.block.Block;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
 public class ParticleManager {
 
     private static final FarmAdder instance = FarmAdder.getInstance();
     private static BukkitTask currentTask;
+    private static final int MAX_PARTICLES_PER_TICK = 300;
+    private static final int CHUNK_RADIUS = 1; // 플레이어 주변 3x3 청크만 검사
 
     public static void spawnParticle() {
         if (currentTask != null && !currentTask.isCancelled()) {
@@ -30,87 +28,70 @@ public class ParticleManager {
         currentTask = new BukkitRunnable() {
             @Override
             public void run() {
-                if (ConfigManager.PARTICLE_ENABLED) {
-                    String particleType = ConfigManager.PARTICLE_TYPE;
-                    int particleAmount = ConfigManager.PARTICLE_AMOUNT;
-                    double maxDistanceSquared = Math.pow(ConfigManager.PARTICLE_MAX_DISTANCE, 2);
-                    Particle particle = Particle.valueOf(particleType);
+                if (!ConfigManager.PARTICLE_ENABLED) {
+                    return;
+                }
 
-                    // ✅ 비동기적으로 작물 위치 가져오기 (렉 방지)
-                    Bukkit.getScheduler().runTaskAsynchronously(instance, () -> {
-                        List<Location> cropLocations = getCropLocation();
-                        List<String> locationsToDelete = new ArrayList<>();
-                        Map<Chunk, List<Location>> chunkMap = new HashMap<>();
+                Particle particle = Particle.valueOf(ConfigManager.PARTICLE_TYPE);
+                int amount = ConfigManager.PARTICLE_AMOUNT;
+                double maxDistanceSquared = Math.pow(ConfigManager.PARTICLE_MAX_DISTANCE, 2);
+                int spawned = 0;
 
-                        // ✅ 동기 청크 로드 방지 및 데이터 캐싱
-                        for (Location location : cropLocations) {
-                            Chunk chunk = location.getChunk();
-                            if (!chunk.isLoaded()) continue; // 비로드 청크는 무시
+                Map<String, Set<String>> chunkMap = instance.getCropsByChunk();
 
-                            Block block = location.getBlock();
-                            if (!(block.getBlockData() instanceof Ageable)) {
-                                locationsToDelete.add(StringUtils.locationToString(location));
-                            } else {
-                                chunkMap.computeIfAbsent(chunk, k -> new ArrayList<>()).add(location);
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    Location playerLocation = player.getLocation();
+                    String worldName = playerLocation.getWorld().getName();
+                    int playerChunkX = playerLocation.getChunk().getX();
+                    int playerChunkZ = playerLocation.getChunk().getZ();
+
+                    for (int dx = -CHUNK_RADIUS; dx <= CHUNK_RADIUS; dx++) {
+                        for (int dz = -CHUNK_RADIUS; dz <= CHUNK_RADIUS; dz++) {
+                            int chunkX = playerChunkX + dx;
+                            int chunkZ = playerChunkZ + dz;
+
+                            if (!playerLocation.getWorld().isChunkLoaded(chunkX, chunkZ)) {
+                                continue;
                             }
-                        }
 
-                        // ✅ 데이터베이스에서 한번에 삭제
-                        if (!locationsToDelete.isEmpty()) {
-                            instance.getDBManager().deleteData("DELETE FROM crops WHERE location IN (" +
-                                            String.join(",", Collections.nCopies(locationsToDelete.size(), "?")) + ")",
-                                    locationsToDelete.toArray());
-                        }
+                            String chunkKey = worldName + ":" + chunkX + ":" + chunkZ;
+                            Set<String> cropLocs = chunkMap.get(chunkKey);
+                            if (cropLocs == null || cropLocs.isEmpty()) {
+                                continue;
+                            }
 
-                        // ✅ 메인 스레드에서 플레이어 검사 실행
-                        Bukkit.getScheduler().runTask(instance, () -> {
-                            for (Player player : Bukkit.getOnlinePlayers()) {
-                                Location playerLocation = player.getLocation();
-                                Chunk playerChunk = playerLocation.getChunk();
+                            Chunk chunk = playerLocation.getWorld().getChunkAt(chunkX, chunkZ);
+                            if (!chunk.isLoaded()) {
+                                continue;
+                            }
 
-                                for (int dx = -1; dx <= 1; dx++) {
-                                    for (int dz = -1; dz <= 1; dz++) {
-                                        Chunk nearbyChunk = playerChunk.getWorld().getChunkAt(playerChunk.getX() + dx, playerChunk.getZ() + dz);
+                            for (String locString : cropLocs) {
+                                Location cropLocation = StringUtils.stringToLocation(locString);
+                                if (cropLocation == null || !playerLocation.getWorld().equals(cropLocation.getWorld())) {
+                                    continue;
+                                }
+                                if (playerLocation.distanceSquared(cropLocation) > maxDistanceSquared) {
+                                    continue;
+                                }
 
-                                        if (chunkMap.containsKey(nearbyChunk)) {
-                                            for (Location location : chunkMap.get(nearbyChunk)) {
-                                                if (playerLocation.getWorld().equals(location.getWorld()) &&
-                                                        playerLocation.distanceSquared(location) < maxDistanceSquared) {
-                                                    Location particleLocation = location.clone().add(0.5, 1, 0.5);
-                                                    location.getWorld().spawnParticle(particle, particleLocation, particleAmount);
-                                                }
-                                            }
-                                        }
-                                    }
+                                if (!(cropLocation.getBlock().getBlockData() instanceof Ageable)) {
+                                    // 실제 블록이 사라진 경우 캐시/DB에서 정리
+                                    instance.queueDelete(locString);
+                                    instance.removeCropFromCache(locString);
+                                    continue;
+                                }
+
+                                cropLocation.getWorld().spawnParticle(particle, cropLocation.clone().add(0.5, 1, 0.5), amount);
+                                spawned++;
+
+                                if (spawned >= MAX_PARTICLES_PER_TICK) {
+                                    return;
                                 }
                             }
-                        });
-                    });
+                        }
+                    }
                 }
             }
-        }.runTaskTimer(instance, 0, 20L * ConfigManager.PARTICLE_PERIOD);
-    }
-
-
-
-    public static List<Location> getCropLocation() {
-        List<Location> locations = new ArrayList<>();
-        try(Connection connection = instance.getDBManager().getConnection()) {
-            String query = "SELECT location FROM crops";
-            PreparedStatement preparedStatement = connection.prepareStatement(query);
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            while(resultSet.next()) {
-                String locationString = resultSet.getString("location");
-                if(locationString != null) {
-                    String[] locationSplit = locationString.split(",");
-                    Location location = new Location(instance.getServer().getWorld(locationSplit[0]), Double.parseDouble(locationSplit[1]), Double.parseDouble(locationSplit[2]), Double.parseDouble(locationSplit[3]));
-                    locations.add(location);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return locations;
+        }.runTaskTimer(instance, 0, 20L * Math.max(1, ConfigManager.PARTICLE_PERIOD));
     }
 }

@@ -136,6 +136,35 @@ public class DBManager {
         }
     }
 
+    public void insertOrReplaceBatch(List<String[]> rows) {
+        if (rows == null || rows.isEmpty()) {
+            return;
+        }
+
+        String dbType = ConfigManager.getString("database.type");
+        String sql;
+
+        if ("mysql".equalsIgnoreCase(dbType)) {
+            sql = "INSERT INTO crops (location, crop) VALUES (?, ?) ON DUPLICATE KEY UPDATE crop = VALUES(crop)";
+        } else {
+            sql = "INSERT OR REPLACE INTO crops (location, crop) VALUES (?, ?)";
+        }
+
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (String[] row : rows) {
+                if (row.length < 2) {
+                    continue;
+                }
+                stmt.setString(1, row[0]);
+                stmt.setString(2, row[1]);
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void insertOrUpdateData(String query, Object... params) {
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(query)) {
             for (int i = 0; i < params.length; i++) {
