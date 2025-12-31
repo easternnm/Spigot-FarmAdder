@@ -5,6 +5,7 @@ import me.do31.farmAdder.utils.ConfigManager;
 import me.do31.farmAdder.utils.CropsConfigManager;
 import me.do31.farmAdder.utils.ParticleManager;
 import me.do31.farmAdder.utils.ShopManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Particle;
 import org.bukkit.command.Command;
@@ -14,7 +15,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
+import java.sql.Connection;
+import java.sql.Statement;
 
 public class BasicCommand implements CommandExecutor {
     FarmAdder instance = FarmAdder.getInstance();
@@ -49,6 +51,20 @@ public class BasicCommand implements CommandExecutor {
                     sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[&6 FarmAdder&f ]&e 플러그인 설정을 다시 불러왔습니다."));
                     return true;
                 }
+            }
+            if(args[0].equalsIgnoreCase("vacuum")) {
+                sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] VACUUM 실행 중..."));
+                Bukkit.getScheduler().runTaskAsynchronously(instance, () -> {
+                    try (Connection conn = instance.getDBManager().getConnection();
+                         Statement stmt = conn.createStatement()) {
+                        stmt.execute("VACUUM");
+                        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] VACUUM 완료!"));
+                    } catch (Exception ex) {
+                        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', "&f[ &6FarmAdder &f] &cVACUUM 실패: " +
+                                ex.getMessage()));
+                    }
+                });
+                return true;
             }
         }
         if(args[0].equalsIgnoreCase("bonemeal")) {
@@ -86,6 +102,7 @@ public class BasicCommand implements CommandExecutor {
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder shop"));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder particle"));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder bonemeal <on/off>"));
+                player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder vacuum"));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&',"&7/farmadder reload"));
                 player.sendMessage("");
             }

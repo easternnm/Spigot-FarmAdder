@@ -1,5 +1,5 @@
 name: FarmAdder
-version: '1.2.3'
+version: '1.2.4'
 main: me.do31.farmAdder.FarmAdder
 api-version: '1.20'
 author: do31

@@ -25,7 +25,7 @@ public class BasicCommandTabCompleter implements TabCompleter {
         }
 
         if(args.length == 1) {
-            List<String> commands = List.of("give", "particle", "reload", "shop", "bonemeal");
+            List<String> commands = List.of("give", "particle", "reload", "vacuum", "shop", "bonemeal");
             complections.addAll(commands);
         } else if(args.length == 2) {
             if(args[0].equalsIgnoreCase("give")) {
